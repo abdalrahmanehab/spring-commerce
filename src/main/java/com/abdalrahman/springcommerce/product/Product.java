@@ -1,4 +1,4 @@
-package product;
+package com.abdalrahman.springcommerce.product;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

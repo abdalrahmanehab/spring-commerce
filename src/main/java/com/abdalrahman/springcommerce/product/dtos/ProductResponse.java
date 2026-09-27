@@ -1,4 +1,4 @@
-package product.dtos;
+package com.abdalrahman.springcommerce.product.dtos;
 
 import lombok.*;
 
