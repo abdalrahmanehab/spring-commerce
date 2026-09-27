@@ -1,4 +1,4 @@
-package com.abdalrahman.springcommerce.errors.models;
+package com.abdalrahman.springcommerce.shared.errors.models;
 
 import java.sql.Timestamp;
 
