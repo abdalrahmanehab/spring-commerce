@@ -13,24 +13,25 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductRequest {
-    @NotBlank (message = "SKU is required")
+
+    @NotBlank(message = "{product.sku.required}")
     private String sku;
 
-    @NotBlank (message = "Name is required")
+    @NotBlank(message = "{product.name.required}")
     private String name;
 
-    @NotBlank (message = "Description is required")
+    @NotBlank(message = "{product.description.required}")
     private String description;
 
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = true , message = ("Price can not be negative"))
-    @Digits(integer = 10, fraction = 2, message = "Price format must be up to 10 digits and 2 decimals")
+    @NotNull(message = "{product.price.required}")
+    @DecimalMin(value = "0.0", inclusive = true, message = "{product.price.negative}")
+    @Digits(integer = 10, fraction = 2, message = "{product.price.format}")
     private BigDecimal price;
 
-    @NotNull(message = "Quantity is required")
-    @Min(value = 0, message = "Quantity can not be negative")
+    @NotNull(message = "{product.quantity.required}")
+    @Min(value = 0, message = "{product.quantity.negative}")
     private Integer quantity;
 
-    @NotBlank(message = "Brand is required")
+    @NotBlank(message = "{product.brand.required}")
     private String brand;
 }

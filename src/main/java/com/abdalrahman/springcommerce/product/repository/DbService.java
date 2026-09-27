@@ -17,5 +17,7 @@ public interface DbService {
 
     Optional<Product> findById(Long id);
 
+    Optional<Product> findBySku(String sku);
+
     Collection<Product> findAll();
 }
