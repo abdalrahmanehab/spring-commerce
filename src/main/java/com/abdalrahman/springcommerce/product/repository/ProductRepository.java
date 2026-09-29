@@ -11,9 +11,9 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository {
 
-    void save(Product product);
+    Product save(Product product);
 
-    void update(Long id , Product product);
+    Product update(Long id , Product product);
 
     void delete(Long id);
 

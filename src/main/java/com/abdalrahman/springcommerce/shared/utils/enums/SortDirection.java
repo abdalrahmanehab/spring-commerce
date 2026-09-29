@@ -1,8 +1,10 @@
 package com.abdalrahman.springcommerce.shared.utils.enums;
 
+import com.abdalrahman.springcommerce.shared.utils.time.TimeHelper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 
 @Getter
@@ -25,9 +27,18 @@ public enum SortDirection {
     }
 
 
+    @Getter
     public static class SortDirectionException extends RuntimeException {
-        public SortDirectionException (String message) {
-            super(message);
+        private final String description;
+
+        public static final int CODE = 9200;
+        public static final String MESSAGE = "SortDirectionError";
+
+        private final Timestamp currentTimeStamp = TimeHelper.currentTimeStamp();
+
+        public SortDirectionException (String description) {
+            super(description);
+            this.description = description;
         }
     }
 }

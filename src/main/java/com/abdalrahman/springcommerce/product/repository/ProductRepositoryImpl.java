@@ -19,16 +19,17 @@ public class ProductRepositoryImpl implements ProductRepository{
     private final DbService dbService;
 
     @Override
-    public void save(Product product) {
+    public Product save(Product product) {
         dbService.save(product);
         log.debug("Product saved successfully with [id={}]",product.getId());
+        return product;
     }
 
     @Override
-    public void update(Long id, Product product) {
+    public Product update(Long id, Product product) {
         dbService.update(id,product);
         log.debug("Product updated successfully with [id={}]",product.getId());
-
+        return product;
     }
 
     @Override
