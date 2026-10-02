@@ -98,7 +98,6 @@ public class ProductServiceImpl implements ProductService {
         Product product = ProductMapper.toProduct(request);
         product.setId(productIsExist.getId());
 
-        ProductMapper.toProductResponse(productRepository.update(product));
         ProductResponse response = ProductMapper.toProductResponse(productRepository.update(product));
 
         log.info("Product updated [id={}, sku={}]", response.id(), response.sku());
