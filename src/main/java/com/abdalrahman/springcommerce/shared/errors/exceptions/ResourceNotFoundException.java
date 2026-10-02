@@ -8,15 +8,15 @@ import java.sql.Timestamp;
 
 @EqualsAndHashCode(callSuper = false)
 @Getter
-public class DuplicateSkuException extends RuntimeException {
+public class ResourceNotFoundException extends RuntimeException {
     private final String description;
 
     private final Timestamp currentTimeStamp = TimeHelper.currentTimeStamp();
 
-    public static int CODE = 2001;
-    public static final String MESSAGE = "DuplicateSkuError";
+    public static int CODE = 1004;
+    public static final String MESSAGE = "ResourceNotFoundError";
 
-    public DuplicateSkuException(String description) {
+    public ResourceNotFoundException(String description) {
         super(description);
         this.description = description;
     }

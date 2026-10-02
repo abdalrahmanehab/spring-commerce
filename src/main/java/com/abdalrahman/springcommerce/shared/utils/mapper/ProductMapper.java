@@ -6,11 +6,11 @@ import com.abdalrahman.springcommerce.product.dtos.ProductResponse;
 
 
 public class ProductMapper {
-    private ProductMapper(){
+    private ProductMapper() {
         throw new AssertionError("Utility class , Can not be instantiated!");
     }
 
-    public static ProductResponse toProductResponse (final Product product){
+    public static ProductResponse toProductResponse(final Product product) {
         return new ProductResponse(
                 product.getId(),
                 product.getSku(),

@@ -9,9 +9,9 @@ public interface DbService {
 
     void save(Product product);
 
-    void update (Long id , Product product);
+    void update(Product product);
 
-    void delete (Long id);
+    void delete(Long id);
 
     void clear();
 

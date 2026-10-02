@@ -1,6 +1,6 @@
 package com.abdalrahman.springcommerce.shared.errors.handlers;
 
-import com.abdalrahman.springcommerce.shared.errors.exceptions.DuplicateSkuException;
+import com.abdalrahman.springcommerce.shared.errors.exceptions.ResourceNotFoundException;
 import com.abdalrahman.springcommerce.shared.errors.models.ErrorResponse;
 import com.abdalrahman.springcommerce.shared.errors.models.GenericResponse;
 import org.springframework.http.HttpStatus;
@@ -9,15 +9,16 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
-public class ProductExceptionHandler {
+public class GlobalExceptionHandler {
 
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(DuplicateSkuException.class)
-    public GenericResponse<ErrorResponse> handleDuplicateSkuException(DuplicateSkuException e) {
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public GenericResponse<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException e) {
         return new GenericResponse<>(
-                DuplicateSkuException.CODE,
+                ResourceNotFoundException.CODE,
                 e.getCurrentTimeStamp(),
-                new ErrorResponse(DuplicateSkuException.MESSAGE, e.getDescription())
+                new ErrorResponse(ResourceNotFoundException.MESSAGE, e.getDescription())
         );
     }
+
 }

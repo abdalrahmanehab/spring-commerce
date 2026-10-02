@@ -3,29 +3,31 @@ package com.abdalrahman.springcommerce.product.service;
 import com.abdalrahman.springcommerce.product.dtos.ProductRequest;
 import com.abdalrahman.springcommerce.product.dtos.ProductResponse;
 import com.abdalrahman.springcommerce.shared.errors.exceptions.DuplicateSkuException;
+import com.abdalrahman.springcommerce.shared.errors.exceptions.ResourceNotFoundException;
 import com.abdalrahman.springcommerce.shared.utils.enums.SortDirection;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public interface ProductService {
-    ProductResponse createProduct(ProductRequest request) throws DuplicateSkuException;
 
-    ProductResponse getProductById(Long id);
+    ProductResponse create(ProductRequest request) throws DuplicateSkuException;
 
-    ProductResponse getProductBySku(String sku);
+    ProductResponse getById(Long id) throws ResourceNotFoundException;
 
-    List<ProductResponse> getAllProducts();
+    ProductResponse getBySku(String sku) throws ResourceNotFoundException;
 
-    List<ProductResponse> getProductsByBrand(String brand);
+    List<ProductResponse> getAll();
 
-    List<ProductResponse> getProductsByPriceRange(BigDecimal min, BigDecimal max);
+    List<ProductResponse> getAllByBrand(String brand);
 
-    List<ProductResponse> getAllProductsSortedByPrice(SortDirection direction);
+    List<ProductResponse> getAllInPriceRange(BigDecimal min, BigDecimal max);
 
-    ProductResponse updateProduct(Long id, ProductRequest request);
+    List<ProductResponse> getAllSortedByPrice(SortDirection direction);
 
-    void deleteProduct(Long id);
+    ProductResponse update(Long id, ProductRequest request) throws ResourceNotFoundException, DuplicateSkuException;
 
+    void delete(Long id) throws ResourceNotFoundException;
 
+    void deleteAll();
 }

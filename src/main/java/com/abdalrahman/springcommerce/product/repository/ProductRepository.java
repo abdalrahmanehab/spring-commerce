@@ -13,7 +13,7 @@ public interface ProductRepository {
 
     Product save(Product product);
 
-    Product update(Long id , Product product);
+    Product update(Product product);
 
     void delete(Long id);
 
@@ -23,7 +23,9 @@ public interface ProductRepository {
 
     Optional<Product> findBySku(String sku);
 
-    Collection<Product> findByBrand(String brand);
+    Collection<Product> findAll();
+
+    Collection<Product> findAllByBrand(String brand);
 
     Collection<Product> findAllInPriceRange(BigDecimal min, BigDecimal max);
 
