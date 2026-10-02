@@ -1,25 +1,27 @@
 package com.abdalrahman.springcommerce.product.repository;
 
 import com.abdalrahman.springcommerce.product.Product;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-
+@Slf4j
 @Component
-public class InMemoryDb  implements DbService {
+public class InMemoryDb implements DbService {
 
     AtomicLong idGenerator = new AtomicLong(1);
-    private final Map<Long,Product> productDb = new ConcurrentHashMap<>();
+    private final Map<Long, Product> productDb = new ConcurrentHashMap<>();
 
 
     @Override
     public void save(final Product product) {
         Long newId = idGenerator.incrementAndGet();
         product.setId(newId);
-        productDb.put(newId,product);
+        productDb.put(newId, product);
+        log.debug("Saved product: id={}, sku={}", newId, product.getSku());
     }
 
     @Override
@@ -28,13 +30,16 @@ public class InMemoryDb  implements DbService {
     }
 
     @Override
-    public void update(final Long id,final Product product) {
-        productDb.put(id,product);
+    public void update(final Product product) {
+        productDb.put(product.getId(), product);
+        log.debug("Updated product: id={}, sku={}", product.getId(), product.getSku());
     }
 
     @Override
     public void clear() {
+        final int count = productDb.size();
         productDb.clear();
+        log.warn("Cleared ALL products from in-memory store: {} entries removed", count);
     }
 
     @Override
