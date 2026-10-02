@@ -13,7 +13,7 @@ public class DuplicateSkuException extends RuntimeException {
 
     private final Timestamp currentTimeStamp = TimeHelper.currentTimeStamp();
 
-    public static int Code = 2001;
+    public static int CODE = 2001;
     public static final String MESSAGE = "DuplicateSkuError";
 
     public DuplicateSkuException(String description) {

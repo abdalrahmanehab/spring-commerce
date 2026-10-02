@@ -13,7 +13,7 @@ public class ResourceNotFoundException extends RuntimeException {
 
     private final Timestamp currentTimeStamp = TimeHelper.currentTimeStamp();
 
-    public static int Code = 1004;
+    public static int CODE = 1004;
     public static final String MESSAGE = "ResourceNotFoundError";
 
     public ResourceNotFoundException(String description) {
