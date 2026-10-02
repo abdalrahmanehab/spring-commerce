@@ -15,7 +15,7 @@ public enum SortDirection {
 
     final String direction;
 
-    public static SortDirection formType (String sortingDirection){
+    public static SortDirection fromType(String sortingDirection) {
         return Arrays.stream(SortDirection.values())
                 .filter(sortDirection -> sortDirection.hasType(sortingDirection))
                 .findFirst()
@@ -31,12 +31,12 @@ public enum SortDirection {
     public static class SortDirectionException extends RuntimeException {
         private final String description;
 
-        public static final int CODE = 9200;
+        public static final int CODE = 1003;
         public static final String MESSAGE = "SortDirectionError";
 
         private final Timestamp currentTimeStamp = TimeHelper.currentTimeStamp();
 
-        public SortDirectionException (String description) {
+        public SortDirectionException(String description) {
             super(description);
             this.description = description;
         }

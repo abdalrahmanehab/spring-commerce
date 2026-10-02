@@ -1,6 +1,5 @@
 package com.abdalrahman.springcommerce.shared.errors.handlers;
 
-import com.abdalrahman.springcommerce.shared.errors.exceptions.DuplicateSkuException;
 import com.abdalrahman.springcommerce.shared.errors.models.ErrorResponse;
 import com.abdalrahman.springcommerce.shared.errors.models.GenericResponse;
 import com.abdalrahman.springcommerce.shared.utils.enums.SortDirection;
@@ -27,7 +26,7 @@ public class ValidationExceptionHandler {
                 .map(error -> new ErrorResponse(error.getField(), error.getDefaultMessage()))
                 .toList();
 
-        return new GenericResponse<>(9000, currentTimeStamp(), errors);
+        return new GenericResponse<>(1001, currentTimeStamp(), errors);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -38,12 +37,12 @@ public class ValidationExceptionHandler {
                 .map(v -> new ErrorResponse(v.getPropertyPath().toString(), v.getMessage()))
                 .toList();
 
-        return new GenericResponse<>(9100, currentTimeStamp(), errors);
+        return new GenericResponse<>(1002, currentTimeStamp(), errors);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(SortDirection.SortDirectionException.class)
-    public GenericResponse<ErrorResponse> handleSortDirectionException(SortDirection.SortDirectionException e){
+    public GenericResponse<ErrorResponse> handleSortDirectionException(SortDirection.SortDirectionException e) {
         return new GenericResponse<>(
                 SortDirection.SortDirectionException.CODE,
                 e.getCurrentTimeStamp(),

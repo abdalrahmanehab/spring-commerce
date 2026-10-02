@@ -1,7 +1,5 @@
 package com.abdalrahman.springcommerce.product.dtos;
 
-import lombok.*;
-
 import java.math.BigDecimal;
 
 

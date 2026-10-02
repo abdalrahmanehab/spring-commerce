@@ -5,17 +5,18 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.sql.Timestamp;
+
 @EqualsAndHashCode(callSuper = false)
 @Getter
-public class DuplicateSkuException extends RuntimeException{
+public class DuplicateSkuException extends RuntimeException {
     private final String description;
 
     private final Timestamp currentTimeStamp = TimeHelper.currentTimeStamp();
 
-    public static int Code = 100;
+    public static int Code = 2001;
     public static final String MESSAGE = "DuplicateSkuError";
 
-    public DuplicateSkuException(String description){
+    public DuplicateSkuException(String description) {
         super(description);
         this.description = description;
     }

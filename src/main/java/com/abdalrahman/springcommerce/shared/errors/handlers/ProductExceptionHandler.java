@@ -13,7 +13,7 @@ public class ProductExceptionHandler {
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DuplicateSkuException.class)
-    public GenericResponse<ErrorResponse> handleDuplicateSkuException (DuplicateSkuException e){
+    public GenericResponse<ErrorResponse> handleDuplicateSkuException(DuplicateSkuException e) {
         return new GenericResponse<>(
                 DuplicateSkuException.Code,
                 e.getCurrentTimeStamp(),
