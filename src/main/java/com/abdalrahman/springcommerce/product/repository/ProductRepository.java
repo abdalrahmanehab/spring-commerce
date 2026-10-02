@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository {
 
-    Product save(Product product) ;
+    Product save(Product product);
 
     Product update(Product product);
 
