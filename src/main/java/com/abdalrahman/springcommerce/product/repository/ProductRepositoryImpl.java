@@ -57,25 +57,17 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Collection<Product> findAllByBrand(String brand) {
-        return dbService.findAll().stream()
-                .filter(product -> brand.equalsIgnoreCase(product.getBrand()))
-                .toList();
+        return dbService.findByBrand(brand);
     }
 
     @Override
     public Collection<Product> findAllInPriceRange(BigDecimal min, BigDecimal max) {
-        return dbService.findAll().stream()
-                .filter(product -> product.getPrice().compareTo(min) >= 0 && product.getPrice().compareTo(max) <= 0)
-                .toList();
+        return dbService.findByPriceRange(min, max);
     }
 
     @Override
     public Collection<Product> findAllSortedByPrice(SortDirection sortDirection) {
-        return dbService.findAll().stream()
-                .sorted((p1, p2) -> sortDirection == SortDirection.ASC
-                        ? p1.getPrice().compareTo(p2.getPrice())
-                        : p2.getPrice().compareTo(p1.getPrice()))
-                .toList();
+        return dbService.findAllSortedByPrice(sortDirection);
     }
 }
 
