@@ -8,19 +8,52 @@ Package-by-feature modular monolith. Each feature owns its controller, service, 
 
     src/main/java/com/abdalrahman/springcommerce/
     ├── product/
+    │   ├── Product.java
     │   ├── controller/
-    │   ├── service/
+    │   │   └── ProductController.java
+    │   ├── dtos/
+    │   │   ├── ProductRequest.java
+    │   │   └── ProductResponse.java
     │   ├── repository/
-    │   └── dtos/
+    │   │   ├── DbService.java
+    │   │   ├── InMemoryDb.java
+    │   │   ├── JpaDb.java
+    │   │   ├── ProductRepository.java
+    │   │   ├── ProductRepositoryImpl.java
+    │   │   └── SpringDataProductRepository.java
+    │   └── service/
+    │       ├── ProductService.java
+    │       └── ProductServiceImpl.java
     └── shared/
         ├── errors/
+        │   ├── exceptions/
+        │   │   ├── DuplicateSkuException.java
+        │   │   └── ResourceNotFoundException.java
+        │   ├── handlers/
+        │   │   ├── GlobalExceptionHandler.java
+        │   │   ├── ProductExceptionHandler.java
+        │   │   └── ValidationExceptionHandler.java
+        │   └── models/
+        │       ├── ErrorResponse.java
+        │       └── GenericResponse.java
         └── utils/
+            ├── enums/
+            │   └── SortDirection.java
+            ├── mapper/
+            │   └── ProductMapper.java
+            └── time/
+                └── TimeHelper.java
+
+## Database Schema
+
+![ERD](docs/erd.png)
 
 ## Tech Stack
 
 - Language: Java 21
 - Framework: Spring Boot 3
-- Persistence: In-memory (ConcurrentHashMap) -> JPA + PostgreSQL planned
+- Persistence: Spring Data JPA + PostgreSQL
+- Migrations: Liquibase
 - Validation: Bean Validation
 - Build: Maven
 
@@ -28,16 +61,20 @@ Package-by-feature modular monolith. Each feature owns its controller, service, 
 
 - Product module: CRUD, filtering by brand and price range, sorting
 - Centralized exception handling with consistent error envelope
-- Bean Validation with messages in validations.properties
-- Thread-safe in-memory store (ConcurrentHashMap + AtomicLong)
+- Bean Validation with messages in `validations.properties`
+- Database schema versioning with Liquibase
+- Profile-based configuration (dev, local, test, prod)
 
 ## Getting Started
 
     git clone https://github.com/abdalrahmanehab/spring-commerce.git
     cd spring-commerce
+    docker compose up -d
     ./mvnw spring-boot:run
 
-Base URL: http://localhost:8080/commerce
+Base URL: `http://localhost:8080/commerce`
+
+The PostgreSQL container starts on port `5433` to avoid conflicts with a local PostgreSQL install.
 
 ## API Endpoints
 
@@ -56,15 +93,9 @@ Base URL: http://localhost:8080/commerce
 | DELETE | /api/v1/products/{id} | Delete a product |
 | DELETE | /api/v1/products | Delete all products |
 
-## Roadmap
-
-- [x] Product module
-- [ ] Spring Data JPA + PostgreSQL
-- [ ] User module + Spring Security + JWT
-- [ ] Cart module
-- [ ] Order module
-- [ ] Docker + GitHub Actions
-
 ## Profiles
 
-dev (default), local, test, prod
+- `dev` — default development profile
+- `local` — local development with PostgreSQL
+- `test` — in-memory store for tests
+- `prod` — production 
