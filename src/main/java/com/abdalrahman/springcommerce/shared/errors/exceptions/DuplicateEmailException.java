@@ -13,7 +13,7 @@ public class DuplicateEmailException extends RuntimeException {
 
     private final Timestamp currentTimeStamp = TimeHelper.currentTimeStamp();
 
-    public static int CODE = 2002;
+    public static final int CODE = 2002;
     public static final String MESSAGE = "DuplicateEmailError";
 
     public DuplicateEmailException(String description) {

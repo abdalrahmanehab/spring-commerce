@@ -24,25 +24,41 @@ Package-by-feature modular monolith. Each feature owns its controller, service, 
     │   └── service/
     │       ├── ProductService.java
     │       └── ProductServiceImpl.java
-    └── shared/
-        ├── errors/
-        │   ├── exceptions/
-        │   │   ├── DuplicateSkuException.java
-        │   │   └── ResourceNotFoundException.java
-        │   ├── handlers/
-        │   │   ├── GlobalExceptionHandler.java
-        │   │   ├── ProductExceptionHandler.java
-        │   │   └── ValidationExceptionHandler.java
-        │   └── models/
-        │       ├── ErrorResponse.java
-        │       └── GenericResponse.java
-        └── utils/
-            ├── enums/
-            │   └── SortDirection.java
-            ├── mapper/
-            │   └── ProductMapper.java
-            └── time/
-                └── TimeHelper.java
+    ├── security/
+    │   └── SecurityConfig.java
+    ├── shared/
+    │   ├── errors/
+    │   │   ├── exceptions/
+    │   │   │   ├── DuplicateEmailException.java
+    │   │   │   ├── DuplicateSkuException.java
+    │   │   │   └── ResourceNotFoundException.java
+    │   │   ├── handlers/
+    │   │   │   ├── GlobalExceptionHandler.java
+    │   │   │   ├── ProductExceptionHandler.java
+    │   │   │   ├── UserExceptionHandler.java
+    │   │   │   └── ValidationExceptionHandler.java
+    │   │   └── models/
+    │   │       ├── ErrorResponse.java
+    │   │       └── GenericResponse.java
+    │   └── utils/
+    │       ├── enums/
+    │       │   └── SortDirection.java
+    │       ├── mapper/
+    │       │   ├── ProductMapper.java
+    │       │   └── UserMapper.java
+    │       └── time/
+    │           └── TimeHelper.java
+    └── user/
+        ├── Role.java
+        ├── User.java
+        ├── dtos/
+        │   ├── RegisterRequest.java
+        │   └── UserResponse.java
+        ├── repository/
+        │   └── UserRepository.java
+        └── service/
+            ├── UserService.java
+            └── UserServiceImpl.java
 
 ## Database Schema
 
@@ -51,15 +67,17 @@ Package-by-feature modular monolith. Each feature owns its controller, service, 
 ## Tech Stack
 
 - Language: Java 21
-- Framework: Spring Boot 3
+- Framework: Spring Boot
 - Persistence: Spring Data JPA + PostgreSQL
 - Migrations: Liquibase
+- Security: Spring Security (BCrypt)
 - Validation: Bean Validation
 - Build: Maven
 
 ## Features
 
-- Product module: CRUD, filtering by brand and price range, sorting
+- Product module: CRUD, filtering by brand and price range, sorting, optimistic locking
+- User module: domain, persistence, and registration service with BCrypt password hashing
 - Centralized exception handling with consistent error envelope
 - Bean Validation with messages in `validations.properties`
 - Database schema versioning with Liquibase
@@ -95,7 +113,7 @@ The PostgreSQL container starts on port `5433` to avoid conflicts with a local P
 
 ## Profiles
 
-- `dev` — default development profile
-- `local` — local development with PostgreSQL
-- `test` — in-memory store for tests
-- `prod` — production 
+- `dev` - default development profile
+- `local` - local development with PostgreSQL
+- `test` - in-memory store for tests
+- `prod` - production
