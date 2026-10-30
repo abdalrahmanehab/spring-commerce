@@ -8,6 +8,7 @@ import com.abdalrahman.springcommerce.shared.errors.exceptions.DuplicateSkuExcep
 import com.abdalrahman.springcommerce.shared.errors.exceptions.ResourceNotFoundException;
 import com.abdalrahman.springcommerce.shared.utils.enums.SortDirection;
 import com.abdalrahman.springcommerce.shared.utils.mapper.ProductMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -81,12 +82,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductResponse update(
-            final Long id
-            , final ProductRequest request)
+            final Long id,
+            final ProductRequest request)
             throws ResourceNotFoundException, DuplicateSkuException {
 
-        Product productIsExist = productRepository.findById(id)
+        Product productToUpdate = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + id));
 
         productRepository.findBySku(request.getSku())
@@ -95,10 +97,16 @@ public class ProductServiceImpl implements ProductService {
                     throw new DuplicateSkuException("SKU already taken");
                 });
 
-        Product product = ProductMapper.toProduct(request);
-        product.setId(productIsExist.getId());
+        productToUpdate.setName(request.getName());
+        productToUpdate.setDescription(request.getDescription());
+        productToUpdate.setPrice(request.getPrice());
+        productToUpdate.setQuantity(request.getQuantity());
+        productToUpdate.setBrand(request.getBrand());
+        productToUpdate.setSku(request.getSku());
 
-        ProductResponse response = ProductMapper.toProductResponse(productRepository.update(product));
+        Product updatedProduct = productRepository.update(productToUpdate);
+
+        ProductResponse response = ProductMapper.toProductResponse(updatedProduct);
 
         log.info("Product updated [id={}, sku={}]", response.id(), response.sku());
         return response;
