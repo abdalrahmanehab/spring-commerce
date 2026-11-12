@@ -1,5 +1,6 @@
 package com.abdalrahman.springcommerce.shared.errors.handlers;
 
+import com.abdalrahman.springcommerce.shared.errors.exceptions.InsufficientStockException;
 import com.abdalrahman.springcommerce.shared.errors.exceptions.ResourceNotFoundException;
 import com.abdalrahman.springcommerce.shared.errors.models.ErrorResponse;
 import com.abdalrahman.springcommerce.shared.errors.models.GenericResponse;
@@ -18,6 +19,16 @@ public class GlobalExceptionHandler {
                 ResourceNotFoundException.CODE,
                 e.getCurrentTimeStamp(),
                 new ErrorResponse(ResourceNotFoundException.MESSAGE, e.getDescription())
+        );
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(InsufficientStockException.class)
+    public GenericResponse<ErrorResponse> handleInsufficientStockException(InsufficientStockException e) {
+        return new GenericResponse<>(
+                InsufficientStockException.CODE,
+                e.getCurrentTimeStamp(),
+                new ErrorResponse(InsufficientStockException.MESSAGE, e.getDescription())
         );
     }
 

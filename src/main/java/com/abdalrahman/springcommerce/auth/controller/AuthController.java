@@ -1,6 +1,5 @@
 package com.abdalrahman.springcommerce.auth.controller;
 
-import com.abdalrahman.springcommerce.product.dtos.ProductResponse;
 import com.abdalrahman.springcommerce.user.dtos.RegisterRequest;
 import com.abdalrahman.springcommerce.user.dtos.UserResponse;
 import com.abdalrahman.springcommerce.user.service.UserService;
