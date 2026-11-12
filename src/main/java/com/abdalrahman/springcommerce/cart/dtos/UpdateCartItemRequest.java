@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateCartRequest {
+public class UpdateCartItemRequest {
 
     @NotNull(message = "{cart.quantity.required}")
     @Min(value = 1, message = "{cart.quantity.min}")
