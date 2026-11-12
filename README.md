@@ -95,6 +95,13 @@ src/main/java/com/abdalrahman/springcommerce/
 
 The API will be available at the base URL: `http://localhost:8080/commerce`
 
+## API Testing
+
+This repository includes a ready-to-use Postman collection.
+1. Import `postman/spring-commerce.postman_collection.json` into Postman.
+2. Select the built-in `spring-commerce API` environment.
+3. Start testing the endpoints immediately.
+
 ## API Endpoints
 
 ### Auth Module
