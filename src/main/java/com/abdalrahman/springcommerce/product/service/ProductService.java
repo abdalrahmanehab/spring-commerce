@@ -3,6 +3,7 @@ package com.abdalrahman.springcommerce.product.service;
 import com.abdalrahman.springcommerce.product.dtos.ProductRequest;
 import com.abdalrahman.springcommerce.product.dtos.ProductResponse;
 import com.abdalrahman.springcommerce.shared.errors.exceptions.DuplicateSkuException;
+import com.abdalrahman.springcommerce.shared.errors.exceptions.InsufficientStockException;
 import com.abdalrahman.springcommerce.shared.errors.exceptions.ResourceNotFoundException;
 import com.abdalrahman.springcommerce.shared.utils.enums.SortDirection;
 
@@ -30,4 +31,8 @@ public interface ProductService {
     void delete(Long id) throws ResourceNotFoundException;
 
     void deleteAll();
+
+    ProductResponse decreaseStock(Long productId, int quantity) throws ResourceNotFoundException, InsufficientStockException;
+
+    void increaseStock(Long productId, int quantity) throws ResourceNotFoundException;
 }

@@ -5,6 +5,7 @@ import com.abdalrahman.springcommerce.product.dtos.ProductRequest;
 import com.abdalrahman.springcommerce.product.dtos.ProductResponse;
 import com.abdalrahman.springcommerce.product.repository.ProductRepository;
 import com.abdalrahman.springcommerce.shared.errors.exceptions.DuplicateSkuException;
+import com.abdalrahman.springcommerce.shared.errors.exceptions.InsufficientStockException;
 import com.abdalrahman.springcommerce.shared.errors.exceptions.ResourceNotFoundException;
 import com.abdalrahman.springcommerce.shared.utils.enums.SortDirection;
 import com.abdalrahman.springcommerce.shared.utils.mapper.ProductMapper;
@@ -126,4 +127,46 @@ public class ProductServiceImpl implements ProductService {
         log.warn("Deleting ALL products");
         productRepository.deleteAll();
     }
+
+    @Override
+    @Transactional
+    public ProductResponse decreaseStock(Long productId, int quantity)
+            throws ResourceNotFoundException, InsufficientStockException {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> {
+                    log.warn("Product not found [id={}]", productId);
+                    return new ResourceNotFoundException("Product not found with ID: " + productId);
+                });
+
+        if (quantity > product.getQuantity()) {
+            log.warn("Insufficient stock [productId={}, available={}, requested={}]",
+                    productId, product.getQuantity(), quantity);
+            throw new InsufficientStockException("Insufficient amount of the Product in Stock!");
+        }
+
+        product.setQuantity(product.getQuantity() - quantity);
+        Product updatedProduct = productRepository.update(product);
+
+        log.info("Product stock decreased [id={}, remainingQuantity={}]",
+                updatedProduct.getId(), updatedProduct.getQuantity());
+        return ProductMapper.toProductResponse(updatedProduct);
+    }
+
+    @Override
+    @Transactional
+    public void increaseStock(final Long productId, final int quantity)
+            throws ResourceNotFoundException {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> {
+                    log.warn("Product not found [id={}]", productId);
+                    return new ResourceNotFoundException("Product not found with ID: " + productId);
+                });
+
+        product.setQuantity(product.getQuantity() + quantity);
+        Product updatedProduct = productRepository.update(product);
+
+        log.info("Product stock increased [id={}, newQuantity={}]",
+                updatedProduct.getId(), updatedProduct.getQuantity());
+    }
+
 }
