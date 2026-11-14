@@ -16,10 +16,10 @@ public class OrderMapper {
         throw new AssertionError("Utility class , Can not be instantiated!");
     }
 
-    public static OrderResponse toOrderResponse(final Order order, final Map<Long, ProductResponse> products) {
+    public static OrderResponse toOrderResponse(final Order order) {
 
         final List<OrderItemResponse> items = order.getItems().stream()
-                .map(orderItem -> toOrderItemResponse(orderItem, products.get(orderItem.getProductId())))
+                .map(OrderMapper::toOrderItemResponse)
                 .toList();
 
         final BigDecimal totalPrice = items.stream()
@@ -37,11 +37,11 @@ public class OrderMapper {
         );
     }
 
-    private static OrderItemResponse toOrderItemResponse(final OrderItem orderItem, ProductResponse product) {
+    private static OrderItemResponse toOrderItemResponse(final OrderItem orderItem) {
 
         return new OrderItemResponse(
                 orderItem.getProductId(),
-                product.name(),
+                orderItem.getProductName(),
                 orderItem.getQuantity(),
                 orderItem.getPriceAtPurchase(),
                 orderItem.getSubtotal()
