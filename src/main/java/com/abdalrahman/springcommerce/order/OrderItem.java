@@ -30,8 +30,12 @@ public class OrderItem {
     @Column(name = "price_at_purchase", nullable = false, updatable = false, precision = 10, scale = 2)
     private BigDecimal priceAtPurchase;
 
-    public OrderItem(Long productId, Integer quantity, BigDecimal priceAtPurchase) {
+    @Column(name = "product_name", nullable = false, updatable = false)
+    private String productName;
+
+    public OrderItem(Long productId, String productName, Integer quantity, BigDecimal priceAtPurchase) {
         this.productId = productId;
+        this.productName = productName;
         this.quantity = quantity;
         this.priceAtPurchase = priceAtPurchase;
     }

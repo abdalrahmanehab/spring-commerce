@@ -39,4 +39,12 @@
         </sql>
     </changeSet>
 
+    <changeSet id="007-add-product-name-to-order-items" author="abdalrahman">
+        <addColumn tableName="order_items">
+            <column name="product_name" type="VARCHAR(255)" defaultValue="unknown">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

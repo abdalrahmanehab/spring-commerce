@@ -1,5 +1,6 @@
 package com.abdalrahman.springcommerce.order;
 
+import com.abdalrahman.springcommerce.shared.errors.exceptions.InvalidOrderStateException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -65,5 +66,28 @@ public class Order {
     private void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void changeStatus(final OrderStatus nextStatus) {
+        boolean allowed = canTransitionTo(nextStatus);
+
+        if (!allowed) {
+            throw new InvalidOrderStateException(
+                    "Cannot transition order from " + this.status + " to " + nextStatus
+            );
+        }
+
+        this.status = nextStatus;
+    }
+
+    private boolean canTransitionTo(OrderStatus nextStatus) {
+
+        return switch (this.status) {
+            case PENDING -> nextStatus == OrderStatus.CONFIRMED || nextStatus == OrderStatus.CANCELLED;
+            case CONFIRMED -> nextStatus == OrderStatus.SHIPPED || nextStatus == OrderStatus.CANCELLED;
+            case SHIPPED -> nextStatus == OrderStatus.DELIVERED;
+            case DELIVERED, CANCELLED -> false;
+        };
+    }
+
 
 }
