@@ -14,10 +14,11 @@ Designed as a **package-by-feature modular monolith**, each domain module encaps
 
 - **Product Catalog & Inventory:** Full CRUD operations, multi-criteria filtering (by brand and price range), dynamic price sorting, and **optimistic locking** to prevent lost updates under concurrent writes.
 - **Shopping Cart:** Lazy cart creation, stock availability checks, automatic quantity merging, and live total calculation without storing prices in the cart table.
-- **User & Security Foundation:** User domain modeling, persistence, and account registration secured with **Spring Security** and **BCrypt** password hashing.
+- **Order Management:** Atomic checkout in a single transaction (stock reservation, price and product name snapshots, cart clearing), an order status state machine with validated transitions, and automatic stock restoration on cancellation.
+- **User & Registration:** User domain modeling, persistence, and account registration with **BCrypt** password hashing. JWT authentication is planned (see Roadmap).
 - **Centralized Exception Handling:** Unified error interception across domain and validation layers returning a consistent JSON response envelope (`GenericResponse` / `ErrorResponse`).
 - **Externalized Bean Validation:** Request payload validation backed by centralized message bundles in `validations.properties`.
-- **Database Schema Versioning:** Repeatable, version-controlled database migrations managed via **Liquibase**.
+- **Database Schema Versioning:** Repeatable, version-controlled database migrations managed via **Liquibase**, with Hibernate set to `validate` only.
 - **Pluggable Persistence Strategy:** Abstracted data access supporting both JPA/PostgreSQL and an in-memory store for fast, isolated testing.
 - **Multi-Environment Profiles:** Tailored configurations for `dev`, `local`, `test`, and `prod` environments.
 
@@ -32,36 +33,53 @@ Designed as a **package-by-feature modular monolith**, each domain module encaps
 
 ## Architecture
 
-The codebase follows a **package-by-feature** structure rather than traditional horizontal layering, keeping domain logic cohesive and decoupled:
+The codebase follows a **package-by-feature** structure rather than traditional horizontal layering, keeping domain logic cohesive and decoupled. Each feature package contains its own `controller`, `service`, `repository`, and `dtos`.
 
 ```text
 src/main/java/com/abdalrahman/springcommerce/
-├── auth/                     # Authentication module
-│   └── controller/           # Registration endpoint (AuthController)
-├── cart/                     # Shopping cart domain module
-│   ├── controller/           # REST endpoints (CartController)
-│   ├── service/              # Cart business logic & stock checks
-│   ├── repository/           # Cart data access layer
-│   ├── dtos/                 # Cart request & response contracts
-│   ├── Cart.java             # Cart aggregate root
-│   └── CartItem.java         # Cart item entity
-├── product/                  # Product domain module
-│   ├── controller/           # REST endpoints (ProductController)
-│   ├── service/              # Business logic interface & implementation
-│   ├── repository/           # Persistence abstraction (JPA & In-Memory adapters)
-│   ├── dtos/                 # Request & response contracts
-│   └── Product.java          # Aggregate root / JPA entity
-├── user/                     # User domain module
-│   ├── service/              # Registration & user management logic
-│   ├── repository/           # User data access layer
-│   ├── dtos/                 # User payloads
-│   ├── User.java             # User entity
-│   └── Role.java             # Authorization roles
-├── security/                 # Spring Security & password encoder configs
-└── shared/                   # Cross-cutting infrastructure
-    ├── errors/               # Custom exceptions, @RestControllerAdvice handlers & response envelopes
-    └── utils/                # Entity-DTO mappers, time utilities & shared enums
+├── auth/
+│   └── controller/
+├── cart/
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── dtos/
+│   ├── Cart.java
+│   └── CartItem.java
+├── order/
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── dtos/
+│   ├── Order.java
+│   ├── OrderItem.java
+│   └── OrderStatus.java
+├── product/
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── dtos/
+│   └── Product.java
+├── user/
+│   ├── service/
+│   ├── repository/
+│   ├── dtos/
+│   ├── User.java
+│   └── Role.java
+├── security/
+└── shared/
+    ├── errors/
+    └── utils/
 ```
+
+## Design Decisions
+
+- **Cart is mutable, Order is immutable.** The cart shows live prices computed from the catalog. An order stores `price_at_purchase` and `product_name` per item, so order history never changes when the catalog does.
+- **Atomic checkout.** `placeOrder` runs in one transaction. If any item is out of stock, the whole operation rolls back and the cart and stock are left untouched.
+- **Overselling protection.** Stock changes go through `ProductService` and are guarded by `@Version` optimistic locking.
+- **Order state machine.** Allowed transitions: `PENDING` to `CONFIRMED` to `SHIPPED` to `DELIVERED`. Cancellation is allowed only from `PENDING` or `CONFIRMED`, and it restores stock.
+- **Module boundaries.** Modules talk to each other through service interfaces, never through another module's repository. Cart and Order reference users and products by id, not by entity.
+- **Database as the last line of defense.** Invariants such as one cart per user, one row per product per cart, and positive quantities are enforced with constraints, not only in code.
 
 ## Database Schema
 
@@ -90,7 +108,7 @@ src/main/java/com/abdalrahman/springcommerce/
 
 3. **Build and run the application:**
    ```bash
-   ./mvnw spring-boot:run
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
    ```
 
 The API will be available at the base URL: `http://localhost:8080/commerce`
@@ -123,7 +141,6 @@ This repository includes a ready-to-use Postman collection.
 | `GET` | `/api/v1/products/sorted?direction={ASC\|DESC}` | Sort products by price (`ASC` or `DESC`) |
 | `PUT` | `/api/v1/products/{id}` | Update an existing product |
 | `DELETE` | `/api/v1/products/{id}` | Delete a product by ID |
-| `DELETE` | `/api/v1/products` | Delete all products |
 
 ### Cart Module
 
@@ -135,6 +152,15 @@ This repository includes a ready-to-use Postman collection.
 | `DELETE` | `/api/v1/carts/{userId}/items/{productId}` | Remove an item from the cart |
 | `DELETE` | `/api/v1/carts/{userId}` | Clear all items from the cart |
 
+### Order Module
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/orders/user/{userId}` | Place an order from the user's cart |
+| `GET` | `/api/v1/orders/{orderId}` | Retrieve an order by ID |
+| `GET` | `/api/v1/orders/user/{userId}` | Retrieve a user's order history |
+| `PATCH` | `/api/v1/orders/{orderId}/status` | Update order status |
+
 ## Profiles
 
 Activate a specific profile via `-Dspring-boot.run.profiles=<profile>` or `SPRING_PROFILES_ACTIVE`:
@@ -143,3 +169,12 @@ Activate a specific profile via `-Dspring-boot.run.profiles=<profile>` or `SPRIN
 - **`local`** - Local development connected to the Dockerized PostgreSQL instance (`localhost:5433`).
 - **`test`** - Fast, isolated testing environment backed by the in-memory store (`InMemoryDb`).
 - **`prod`** - Production-ready configuration.
+
+## Roadmap
+
+- [x] Product, User, Cart, and Order modules
+- [ ] JWT authentication and role-based authorization
+- [ ] Product pagination and OpenAPI documentation
+- [ ] Integration tests with Testcontainers and a concurrency test for overselling
+- [ ] CI pipeline with GitHub Actions
+- [ ] Semantic product search with Spring AI

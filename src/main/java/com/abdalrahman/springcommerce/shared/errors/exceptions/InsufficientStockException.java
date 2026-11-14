@@ -14,7 +14,7 @@ public class InsufficientStockException extends RuntimeException {
     private final Timestamp currentTimeStamp = TimeHelper.currentTimeStamp();
 
     public static final int CODE = 2003;
-    public static final String MESSAGE = "InsufficientStockException";
+    public static final String MESSAGE = "InsufficientStockError";
 
     public InsufficientStockException(String description) {
         super(description);

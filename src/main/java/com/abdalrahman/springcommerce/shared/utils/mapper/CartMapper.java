@@ -33,7 +33,7 @@ public class CartMapper {
         );
     }
 
-    public static CartItemResponse toCartItemResponse(final CartItem item, final ProductResponse product) {
+    private static CartItemResponse toCartItemResponse(final CartItem item, final ProductResponse product) {
 
         final BigDecimal subtotal = product.price()
                 .multiply(BigDecimal.valueOf(item.getQuantity()));

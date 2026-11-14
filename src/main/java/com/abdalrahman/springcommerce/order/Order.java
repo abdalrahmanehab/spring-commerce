@@ -1,0 +1,93 @@
+package com.abdalrahman.springcommerce.order;
+
+import com.abdalrahman.springcommerce.shared.errors.exceptions.InvalidOrderStateException;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(name = "orders")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private OrderStatus status;
+
+    @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalPrice;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+
+    public Order(Long userId, OrderStatus status) {
+        this.userId = userId;
+        this.status = status;
+        this.totalPrice = BigDecimal.ZERO;
+    }
+
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+        this.totalPrice = this.totalPrice.add(item.getSubtotal());
+    }
+
+    @PrePersist
+    private void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    private void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void changeStatus(final OrderStatus nextStatus) {
+        boolean allowed = canTransitionTo(nextStatus);
+
+        if (!allowed) {
+            throw new InvalidOrderStateException(
+                    "Cannot transition order from " + this.status + " to " + nextStatus
+            );
+        }
+
+        this.status = nextStatus;
+    }
+
+    private boolean canTransitionTo(OrderStatus nextStatus) {
+
+        return switch (this.status) {
+            case PENDING -> nextStatus == OrderStatus.CONFIRMED || nextStatus == OrderStatus.CANCELLED;
+            case CONFIRMED -> nextStatus == OrderStatus.SHIPPED || nextStatus == OrderStatus.CANCELLED;
+            case SHIPPED -> nextStatus == OrderStatus.DELIVERED;
+            case DELIVERED, CANCELLED -> false;
+        };
+    }
+
+
+}
