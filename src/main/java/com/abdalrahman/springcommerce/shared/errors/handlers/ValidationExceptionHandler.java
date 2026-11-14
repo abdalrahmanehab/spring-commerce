@@ -3,8 +3,10 @@ package com.abdalrahman.springcommerce.shared.errors.handlers;
 import com.abdalrahman.springcommerce.shared.errors.models.ErrorResponse;
 import com.abdalrahman.springcommerce.shared.errors.models.GenericResponse;
 import com.abdalrahman.springcommerce.shared.utils.enums.SortDirection;
+import com.abdalrahman.springcommerce.shared.utils.time.TimeHelper;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -47,6 +49,16 @@ public class ValidationExceptionHandler {
                 SortDirection.SortDirectionException.CODE,
                 e.getCurrentTimeStamp(),
                 new ErrorResponse(SortDirection.SortDirectionException.MESSAGE, e.getDescription())
+        );
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public GenericResponse<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        return new GenericResponse<>(
+                1005,
+                TimeHelper.currentTimeStamp(),
+                new ErrorResponse("MalformedJsonError", "Invalid request body or enum value")
         );
     }
 }
