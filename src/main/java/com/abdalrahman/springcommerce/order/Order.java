@@ -1,6 +1,7 @@
 package com.abdalrahman.springcommerce.order;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,16 +13,16 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table("orders")
+@Table(name = "orders")
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false, unique = true)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -42,10 +43,10 @@ public class Order {
     private LocalDateTime updatedAt;
 
 
-
-    public Order (Long userId , OrderStatus status){
+    public Order(Long userId, OrderStatus status) {
         this.userId = userId;
         this.status = status;
+        this.totalPrice = BigDecimal.ZERO;
     }
 
     public void addItem(OrderItem item) {
