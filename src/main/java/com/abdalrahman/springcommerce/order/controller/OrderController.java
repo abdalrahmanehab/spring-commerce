@@ -1,8 +1,10 @@
 package com.abdalrahman.springcommerce.order.controller;
 
+import com.abdalrahman.springcommerce.order.Order;
 import com.abdalrahman.springcommerce.order.dtos.OrderResponse;
 import com.abdalrahman.springcommerce.order.dtos.UpdateOrderRequest;
 import com.abdalrahman.springcommerce.order.service.OrderService;
+import com.abdalrahman.springcommerce.security.CurrentUser;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -19,17 +21,26 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final CurrentUser currentUser;
 
-    @PostMapping("/user/{userId}")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse placeOrder(@PathVariable @Positive final Long userId) {
-        return orderService.placeOrder(userId);
+    public OrderResponse placeOrder() {
+        return orderService.placeOrder(currentUser.id());
+    }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public List<OrderResponse> getMyOrders() {
+        return orderService.getByUserId(currentUser.id());
     }
 
     @GetMapping("/{orderId}")
     @ResponseStatus(HttpStatus.OK)
     public OrderResponse getById(@PathVariable @Positive final Long orderId) {
-        return orderService.getById(orderId);
+        OrderResponse order = orderService.getById(orderId);
+        currentUser.checkOwnerAndAdmin(order.userId());
+        return order;
     }
 
     @GetMapping("/user/{userId}")

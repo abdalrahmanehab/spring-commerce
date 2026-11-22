@@ -2,6 +2,7 @@
 
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](#)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](#)
+[![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white)](#)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](#)
 [![Liquibase](https://img.shields.io/badge/Liquibase-2962FF?style=for-the-badge&logo=liquibase&logoColor=white)](#)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#)
@@ -15,8 +16,8 @@ Designed as a **package-by-feature modular monolith**, each domain module encaps
 - **Product Catalog & Inventory:** Full CRUD operations, multi-criteria filtering (by brand and price range), dynamic price sorting, and **optimistic locking** to prevent lost updates under concurrent writes.
 - **Shopping Cart:** Lazy cart creation, stock availability checks, automatic quantity merging, and live total calculation without storing prices in the cart table.
 - **Order Management:** Atomic checkout in a single transaction (stock reservation, price and product name snapshots, cart clearing), an order status state machine with validated transitions, and automatic stock restoration on cancellation.
-- **User & Registration:** User domain modeling, persistence, and account registration with **BCrypt** password hashing. JWT authentication is planned (see Roadmap).
-- **Centralized Exception Handling:** Unified error interception across domain and validation layers returning a consistent JSON response envelope (`GenericResponse` / `ErrorResponse`).
+- **Authentication & Role-Based Security:** Stateless **JWT** authentication with **Spring Security**, **BCrypt** password hashing, role-based access control (`ADMIN` / `CUSTOMER`), and ownership checks (`CurrentUser`) to prevent IDOR across cart and order endpoints.
+- **Centralized Exception Handling:** Unified error interception across domain, security, and validation layers returning a consistent JSON response envelope (`GenericResponse` / `ErrorResponse`).
 - **Externalized Bean Validation:** Request payload validation backed by centralized message bundles in `validations.properties`.
 - **Database Schema Versioning:** Repeatable, version-controlled database migrations managed via **Liquibase**, with Hibernate set to `validate` only.
 - **Pluggable Persistence Strategy:** Abstracted data access supporting both JPA/PostgreSQL and an in-memory store for fast, isolated testing.
@@ -25,7 +26,7 @@ Designed as a **package-by-feature modular monolith**, each domain module encaps
 ## Tech Stack
 
 - **Language:** Java 21
-- **Framework:** Spring Boot 3, Spring Security, Spring Web
+- **Framework:** Spring Boot 3, Spring Security (JWT), Spring Web
 - **Persistence:** Spring Data JPA, Hibernate, PostgreSQL
 - **Database Migrations:** Liquibase
 - **Validation:** Jakarta Bean Validation
@@ -38,7 +39,9 @@ The codebase follows a **package-by-feature** structure rather than traditional 
 ```text
 src/main/java/com/abdalrahman/springcommerce/
 ├── auth/
-│   └── controller/
+│   ├── controller/
+│   ├── service/
+│   └── dtos/
 ├── cart/
 │   ├── controller/
 │   ├── service/
@@ -61,12 +64,18 @@ src/main/java/com/abdalrahman/springcommerce/
 │   ├── dtos/
 │   └── Product.java
 ├── user/
+│   ├── controller/
 │   ├── service/
 │   ├── repository/
 │   ├── dtos/
 │   ├── User.java
 │   └── Role.java
 ├── security/
+│   ├── CurrentUser.java
+│   ├── JwtAuthenticationFilter.java
+│   ├── JwtService.java
+│   ├── RestSecurityErrorHandler.java
+│   └── SecurityConfig.java
 └── shared/
     ├── errors/
     └── utils/
@@ -78,6 +87,7 @@ src/main/java/com/abdalrahman/springcommerce/
 - **Atomic checkout.** `placeOrder` runs in one transaction. If any item is out of stock, the whole operation rolls back and the cart and stock are left untouched.
 - **Overselling protection.** Stock changes go through `ProductService` and are guarded by `@Version` optimistic locking.
 - **Order state machine.** Allowed transitions: `PENDING` to `CONFIRMED` to `SHIPPED` to `DELIVERED`. Cancellation is allowed only from `PENDING` or `CONFIRMED`, and it restores stock.
+- **Stateless JWT & IDOR prevention.** Cart and order endpoints resolve the authenticated user directly from the JWT via `CurrentUser` instead of accepting `userId` in the URL, and order lookups enforce owner-or-admin checks.
 - **Module boundaries.** Modules talk to each other through service interfaces, never through another module's repository. Cart and Order reference users and products by id, not by entity.
 - **Database as the last line of defense.** Invariants such as one cart per user, one row per product per cart, and positive quantities are enforced with constraints, not only in code.
 
@@ -118,48 +128,58 @@ The API will be available at the base URL: `http://localhost:8080/commerce`
 This repository includes a ready-to-use Postman collection.
 1. Import `postman/spring-commerce.postman_collection.json` into Postman.
 2. Select the built-in `spring-commerce API` environment.
-3. Start testing the endpoints immediately.
+3. Register or log in via `/api/v1/auth/login` and pass the returned JWT as a `Bearer` token in the `Authorization` header for protected endpoints.
 
 ## API Endpoints
 
 ### Auth Module
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/register` | Register a new user account |
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/register` | Public | Register a new user account |
+| `POST` | `/api/v1/auth/login` | Public | Authenticate and receive a JWT token |
+
+### User Module
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/users/me` | Authenticated | Retrieve the current authenticated user's profile |
+| `GET` | `/api/v1/users` | Admin | Retrieve all users |
+| `GET` | `/api/v1/users/{id}` | Admin | Retrieve a user by ID |
+| `DELETE` | `/api/v1/users/{id}` | Admin | Delete a user by ID |
 
 ### Product Module
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/products` | Create a new product |
-| `GET` | `/api/v1/products` | Retrieve all products |
-| `GET` | `/api/v1/products/id/{id}` | Retrieve a product by ID |
-| `GET` | `/api/v1/products/sku/{sku}` | Retrieve a product by SKU |
-| `GET` | `/api/v1/products/brand/{brand}` | Filter products by brand |
-| `GET` | `/api/v1/products/price-range?min={min}&max={max}` | Filter products within a price range |
-| `GET` | `/api/v1/products/sorted?direction={ASC\|DESC}` | Sort products by price (`ASC` or `DESC`) |
-| `PUT` | `/api/v1/products/{id}` | Update an existing product |
-| `DELETE` | `/api/v1/products/{id}` | Delete a product by ID |
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/products` | Admin | Create a new product |
+| `GET` | `/api/v1/products` | Public | Retrieve all products |
+| `GET` | `/api/v1/products/id/{id}` | Public | Retrieve a product by ID |
+| `GET` | `/api/v1/products/sku/{sku}` | Public | Retrieve a product by SKU |
+| `GET` | `/api/v1/products/brand/{brand}` | Public | Filter products by brand |
+| `GET` | `/api/v1/products/price-range?min={min}&max={max}` | Public | Filter products within a price range |
+| `GET` | `/api/v1/products/sorted?direction={ASC\|DESC}` | Public | Sort products by price (`ASC` or `DESC`) |
+| `PUT` | `/api/v1/products/{id}` | Admin | Update an existing product |
+| `DELETE` | `/api/v1/products/{id}` | Admin | Delete a product by ID |
 
 ### Cart Module
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/v1/carts/{userId}` | Retrieve a user's cart |
-| `POST` | `/api/v1/carts/{userId}/items` | Add an item to the cart |
-| `PUT` | `/api/v1/carts/{userId}/items/{productId}` | Update item quantity in the cart |
-| `DELETE` | `/api/v1/carts/{userId}/items/{productId}` | Remove an item from the cart |
-| `DELETE` | `/api/v1/carts/{userId}` | Clear all items from the cart |
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/carts` | Authenticated | Retrieve the current user's cart |
+| `POST` | `/api/v1/carts/items` | Authenticated | Add an item to the cart |
+| `PUT` | `/api/v1/carts/items/{productId}` | Authenticated | Update item quantity in the cart |
+| `DELETE` | `/api/v1/carts/items/{productId}` | Authenticated | Remove an item from the cart |
+| `DELETE` | `/api/v1/carts` | Authenticated | Clear all items from the cart |
 
 ### Order Module
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/orders/user/{userId}` | Place an order from the user's cart |
-| `GET` | `/api/v1/orders/{orderId}` | Retrieve an order by ID |
-| `GET` | `/api/v1/orders/user/{userId}` | Retrieve a user's order history |
-| `PATCH` | `/api/v1/orders/{orderId}/status` | Update order status |
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/orders` | Authenticated | Place an order from the current user's cart |
+| `GET` | `/api/v1/orders/{orderId}` | Owner / Admin | Retrieve an order by ID |
+| `GET` | `/api/v1/orders` | Authenticated | Retrieve the current user's order history |
+| `PATCH` | `/api/v1/orders/{orderId}/status` | Admin | Update order status |
 
 ## Profiles
 
@@ -173,7 +193,8 @@ Activate a specific profile via `-Dspring-boot.run.profiles=<profile>` or `SPRIN
 ## Roadmap
 
 - [x] Product, User, Cart, and Order modules
-- [ ] JWT authentication and role-based authorization
+- [x] JWT authentication and role-based authorization
+- [ ] Security integration tests (role enforcement and IDOR checks)
 - [ ] Product pagination and OpenAPI documentation
 - [ ] Integration tests with Testcontainers and a concurrency test for overselling
 - [ ] CI pipeline with GitHub Actions
