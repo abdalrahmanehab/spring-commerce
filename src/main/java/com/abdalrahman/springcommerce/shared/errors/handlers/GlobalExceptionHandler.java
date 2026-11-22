@@ -7,6 +7,7 @@ import com.abdalrahman.springcommerce.shared.errors.models.GenericResponse;
 import com.abdalrahman.springcommerce.shared.utils.time.TimeHelper;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,6 +44,15 @@ public class GlobalExceptionHandler {
                 TimeHelper.currentTimeStamp(),
                 new ErrorResponse("AccessDeniedExceptionError", "You do not have permission to access this resource")
         );
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(BadCredentialsException.class)
+    public GenericResponse<ErrorResponse> handleBadCredentials(BadCredentialsException e) {
+        return new GenericResponse<>(
+                4011,
+                TimeHelper.currentTimeStamp(),
+                new ErrorResponse("InvalidCredentialsError", "Invalid email or password"));
     }
 
 }
