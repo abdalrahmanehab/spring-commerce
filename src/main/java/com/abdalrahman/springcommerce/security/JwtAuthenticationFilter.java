@@ -1,3 +1,7 @@
+/**
+ * Intercepts incoming HTTP requests once per request to validate the JWT
+ * from the {@code Authorization} header and populate the {@link SecurityContextHolder}.
+ */
 package com.abdalrahman.springcommerce.security;
 
 import jakarta.servlet.FilterChain;
@@ -54,8 +58,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             UserDetails user = userDetailsService.loadUserByUsername(email);
 
-            var authentication = UsernamePasswordAuthenticationToken.authenticated(
+            UsernamePasswordAuthenticationToken authentication = UsernamePasswordAuthenticationToken.authenticated(
                     user, null, user.getAuthorities());
+
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
