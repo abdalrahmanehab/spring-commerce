@@ -4,10 +4,13 @@ import com.abdalrahman.springcommerce.shared.errors.exceptions.InsufficientStock
 import com.abdalrahman.springcommerce.shared.errors.exceptions.ResourceNotFoundException;
 import com.abdalrahman.springcommerce.shared.errors.models.ErrorResponse;
 import com.abdalrahman.springcommerce.shared.errors.models.GenericResponse;
+import com.abdalrahman.springcommerce.shared.utils.time.TimeHelper;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -29,6 +32,16 @@ public class GlobalExceptionHandler {
                 InsufficientStockException.CODE,
                 e.getCurrentTimeStamp(),
                 new ErrorResponse(InsufficientStockException.MESSAGE, e.getDescription())
+        );
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(AccessDeniedException.class)
+    public GenericResponse<ErrorResponse> handleAccessDeniedException(AccessDeniedException e){
+        return new GenericResponse<>(
+                4030,
+                TimeHelper.currentTimeStamp(),
+                new ErrorResponse("AccessDeniedExceptionError", "You do not have permission to access this resource")
         );
     }
 
