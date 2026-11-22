@@ -2,13 +2,28 @@
   "info": {
     "_postman_id": "d93ab5f5-31e8-480e-aa2e-80dfe0949eda",
     "name": "spring-commerce API",
-    "description": "Postman collection for the spring-commerce REST API (Auth, Users, Products, and Cart modules).",
+    "description": "Postman collection for the spring-commerce REST API covering Auth (JWT), Users, Products, Cart, and Orders with role-based access control and automatic token capture.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:8080/commerce",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
       "type": "string"
     },
     {
@@ -20,14 +35,20 @@
       "key": "productId",
       "value": "1",
       "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "1",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "1. Auth & Users",
+      "name": "1. Auth",
+      "description": "Public registration and JWT login endpoints. Login requests automatically save the JWT into collection variables.",
       "item": [
         {
-          "name": "Register User",
+          "name": "Register Customer",
           "request": {
             "method": "POST",
             "header": [
@@ -36,10 +57,6 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"abdalrahman@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Abdalrahman\",\n  \"lastName\": \"Ehab\"\n}"
-            },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/register",
               "host": [
@@ -51,11 +68,40 @@
                 "auth",
                 "register"
               ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Abdalrahman\",\n  \"lastName\": \"Ehab\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.id) {",
+                  "        pm.collectionVariables.set('userId', String(json.id));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Register User - Duplicate Email (409)",
+          "name": "Register - Duplicate Email (409)",
           "request": {
             "method": "POST",
             "header": [
@@ -64,10 +110,6 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"abdalrahman@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Abdalrahman\",\n  \"lastName\": \"Ehab\"\n}"
-            },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/register",
               "host": [
@@ -79,16 +121,354 @@
                 "auth",
                 "register"
               ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Abdalrahman\",\n  \"lastName\": \"Ehab\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Logs in as CUSTOMER and saves the JWT into `customerToken` and `token`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('customerToken', json.token);",
+                  "        pm.collectionVariables.set('token', json.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"abdalrahman@test.com\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Logs in as ADMIN and saves the JWT into `adminToken` and `token`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('adminToken', json.token);",
+                  "        pm.collectionVariables.set('token', json.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Invalid Credentials (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"WrongPassword!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
         }
       ]
     },
     {
-      "name": "2. Products",
+      "name": "2. Users",
+      "description": "Authenticated profile lookup and Admin user management endpoints.",
       "item": [
         {
-          "name": "Create Product - MacBook Pro",
+          "name": "Get Current User (/me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User - No Token (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users - Customer Forbidden (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User by ID (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Products",
+      "description": "Public catalog read endpoints and Admin-only write endpoints.",
+      "item": [
+        {
+          "name": "Create Product - MacBook Pro (Admin)",
           "request": {
             "method": "POST",
             "header": [
@@ -97,10 +477,6 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sku\": \"MACBOOK-PRO-M3\",\n  \"name\": \"MacBook Pro 16\",\n  \"description\": \"Apple M3 Max chip with 36GB Unified Memory\",\n  \"price\": 2499.99,\n  \"quantity\": 15,\n  \"brand\": \"Apple\"\n}"
-            },
             "url": {
               "raw": "{{baseUrl}}/api/v1/products",
               "host": [
@@ -111,11 +487,47 @@
                 "v1",
                 "products"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"MACBOOK-PRO-M3\",\n  \"name\": \"MacBook Pro 16\",\n  \"description\": \"Apple M3 Max chip with 36GB Unified Memory\",\n  \"price\": 2499.99,\n  \"quantity\": 15,\n  \"brand\": \"Apple\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.id) {",
+                  "        pm.collectionVariables.set('productId', String(json.id));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Create Product - Sony Headphones",
+          "name": "Create Product - Sony Headphones (Admin)",
           "request": {
             "method": "POST",
             "header": [
@@ -124,10 +536,6 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sku\": \"SONY-WH1000XM5\",\n  \"name\": \"Sony WH-1000XM5\",\n  \"description\": \"Noise Canceling Wireless Headphones\",\n  \"price\": 399.99,\n  \"quantity\": 60,\n  \"brand\": \"Sony\"\n}"
-            },
             "url": {
               "raw": "{{baseUrl}}/api/v1/products",
               "host": [
@@ -138,11 +546,74 @@
                 "v1",
                 "products"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"SONY-WH1000XM5\",\n  \"name\": \"Sony WH-1000XM5\",\n  \"description\": \"Noise Canceling Wireless Headphones\",\n  \"price\": 399.99,\n  \"quantity\": 60,\n  \"brand\": \"Sony\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Get All Products",
+          "name": "Create Product - Customer Forbidden (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"FORBIDDEN-ITEM-01\",\n  \"name\": \"Unauthorized Product\",\n  \"description\": \"Should return 403 Forbidden for CUSTOMER role\",\n  \"price\": 99.99,\n  \"quantity\": 5,\n  \"brand\": \"Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Products (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -156,11 +627,15 @@
                 "v1",
                 "products"
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Get Product by ID",
+          "name": "Get Product by ID (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -176,11 +651,15 @@
                 "id",
                 "{{productId}}"
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Get Product by SKU",
+          "name": "Get Product by SKU (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -196,11 +675,15 @@
                 "sku",
                 "MACBOOK-PRO-M3"
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Filter Products by Brand",
+          "name": "Filter Products by Brand (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -216,11 +699,15 @@
                 "brand",
                 "Apple"
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Filter Products by Price Range",
+          "name": "Filter Products by Price Range (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -245,11 +732,15 @@
                   "value": "1000"
                 }
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Sort Products by Price (ASC)",
+          "name": "Sort Products by Price ASC (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -270,11 +761,15 @@
                   "value": "ASC"
                 }
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Update Product",
+          "name": "Update Product (Admin)",
           "request": {
             "method": "PUT",
             "header": [
@@ -283,103 +778,126 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sku\": \"MACBOOK-PRO-M3\",\n  \"name\": \"MacBook Pro 16 (Updated)\",\n  \"description\": \"Apple M3 Max with discounted price\",\n  \"price\": 2299.99,\n  \"quantity\": 12,\n  \"brand\": \"Apple\"\n}"
+              "raw": "{\n  \"sku\": \"MACBOOK-PRO-M3\",\n  \"name\": \"MacBook Pro 16 (Updated)\",\n  \"description\": \"Apple M3 Max with discounted price\",\n  \"price\": 2299.99,\n  \"quantity\": 12,\n  \"brand\": \"Apple\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product by ID (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{productId}}"
+              ]
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "products",
-                "{{productId}}"
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
               ]
             }
-          }
-        },
-        {
-          "name": "Delete Product by ID",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "products",
-                "{{productId}}"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Delete All Products",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/products",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "products"
-              ]
-            }
-          }
+          },
+          "response": []
         }
       ]
     },
     {
-      "name": "3. Cart",
+      "name": "4. Cart",
+      "description": "Authenticated user-scoped cart endpoints (user resolved from JWT via CurrentUser).",
       "item": [
         {
-          "name": "Get Cart",
+          "name": "Get My Cart",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/carts/{{userId}}",
+              "raw": "{{baseUrl}}/api/v1/carts",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "carts",
-                "{{userId}}"
+                "carts"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Get Cart - Missing User (404)",
+          "name": "Get Cart - No Token (401)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/carts/999",
+              "raw": "{{baseUrl}}/api/v1/carts",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "carts",
-                "999"
+                "carts"
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Add Item to Cart",
@@ -391,12 +909,8 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 2\n}"
-            },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/carts/{{userId}}/items",
+              "raw": "{{baseUrl}}/api/v1/carts/items",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -404,11 +918,30 @@
                 "api",
                 "v1",
                 "carts",
-                "{{userId}}",
                 "items"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Add Item to Cart - Insufficient Stock (409)",
@@ -420,12 +953,8 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 999\n}"
-            },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/carts/{{userId}}/items",
+              "raw": "{{baseUrl}}/api/v1/carts/items",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -433,11 +962,30 @@
                 "api",
                 "v1",
                 "carts",
-                "{{userId}}",
                 "items"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Update Cart Item Quantity",
@@ -449,12 +997,8 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"quantity\": 4\n}"
-            },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/carts/{{userId}}/items/{{productId}}",
+              "raw": "{{baseUrl}}/api/v1/carts/items/{{productId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -462,12 +1006,31 @@
                 "api",
                 "v1",
                 "carts",
-                "{{userId}}",
                 "items",
                 "{{productId}}"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Remove Item from Cart",
@@ -475,7 +1038,7 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/carts/{{userId}}/items/{{productId}}",
+              "raw": "{{baseUrl}}/api/v1/carts/items/{{productId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -483,31 +1046,281 @@
                 "api",
                 "v1",
                 "carts",
-                "{{userId}}",
                 "items",
                 "{{productId}}"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Clear Cart",
+          "name": "Clear My Cart",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/carts/{{userId}}",
+              "raw": "{{baseUrl}}/api/v1/carts",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "carts",
-                "{{userId}}"
+                "carts"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
               ]
             }
-          }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Orders",
+      "description": "Checkout, user order history, owner-or-admin order lookup, and Admin status updates.",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.id) {",
+                  "        pm.collectionVariables.set('orderId', String(json.id));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID (Owner)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status - Customer Forbidden (403)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
         }
       ]
     }
