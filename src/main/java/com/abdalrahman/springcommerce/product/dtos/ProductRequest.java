@@ -25,7 +25,7 @@ public class ProductRequest {
 
     @NotNull(message = "{product.price.required}")
     @DecimalMin(value = "0.0", inclusive = true, message = "{product.price.negative}")
-    @Digits(integer = 10, fraction = 2, message = "{product.price.format}")
+    @Digits(integer = 8, fraction = 2, message = "{product.price.format}")
     private BigDecimal price;
 
     @NotNull(message = "{product.quantity.required}")

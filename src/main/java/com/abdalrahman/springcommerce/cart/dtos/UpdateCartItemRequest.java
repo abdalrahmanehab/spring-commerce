@@ -1,5 +1,6 @@
 package com.abdalrahman.springcommerce.cart.dtos;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -15,5 +16,6 @@ public class UpdateCartItemRequest {
 
     @NotNull(message = "{cart.quantity.required}")
     @Min(value = 1, message = "{cart.quantity.min}")
+    @Max(value = 1000, message = "{cart.quantity.max}")
     Integer quantity;
 }
