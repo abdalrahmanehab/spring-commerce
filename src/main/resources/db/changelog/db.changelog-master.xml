@@ -10,5 +10,6 @@
     <include file="db/changelog/changes/004-create-cart-items-table.xml"/>
     <include file="db/changelog/changes/005-create-orders-table.xml"/>
     <include file="db/changelog/changes/006-create-order-items-table.xml"/>
+    <include file="db/changelog/changes/007-add-version-to-orders.xml"/>
 
 </databaseChangeLog>
